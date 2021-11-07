@@ -33,6 +33,7 @@ cbuffer cbMaterial : register(b1)
     float3 gFresnelR0;
     float  gRoughness;
 	float4x4 gMatTransform;
+    float gOutlineThreshold;
 };
 
 // Constant data that varies per material.
@@ -105,10 +106,7 @@ float4 PS(VertexOut pin) : SV_Target
     Material mat = { gDiffuseAlbedo, gFresnelR0, shininess };
 
     float intensity = 0.0f;
-    //for (int i = 0; i < NUM_DIR_LIGHTS; ++i)
-    //{
-        intensity += dot(normalize(-gLights[0].Direction), pin.NormalW);
-    //}
+    intensity += dot(normalize(-gLights[0].Direction), pin.NormalW);
     intensity = intensity;
     if (intensity < 0.0f)
         intensity = 0.0f;
@@ -116,9 +114,6 @@ float4 PS(VertexOut pin) : SV_Target
 
     float3 shadowFactor = 1.0f;
 
-    //float4 directLight = ComputeLighting(gLights, mat, pin.PosW, 
-      //  pin.NormalW, toEyeW, shadowFactor);
-    //float3 directLight = mat.DiffuseAlbedo.rgb * gLights[0].Strength;
     float4 lightStrength = { gLights[0].Strength.r,gLights[0].Strength.g, gLights[0].Strength.b, 1.0f };
     float4 litColor = mat.DiffuseAlbedo * lightStrength;
 
@@ -130,6 +125,8 @@ float4 PS(VertexOut pin) : SV_Target
         litColor = float4(0.4f, 0.4f, 0.4f, 1.0f) * litColor;
     else if (intensity < 0.05f)
         litColor = float4(0.2f, 0.2f, 0.2f, 1.0f) * litColor;
+
+    if (dot(toEyeW, pin.NormalW) < gOutlineThreshold) litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Common convention to take alpha from diffuse material.
     litColor.a = gDiffuseAlbedo.a;
