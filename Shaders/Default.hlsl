@@ -112,22 +112,25 @@ float4 PS(VertexOut pin) : SV_Target
         intensity = 0.0f;
 
 
-    float3 shadowFactor = 1.0f;
-
     float4 lightStrength = { gLights[0].Strength.r,gLights[0].Strength.g, gLights[0].Strength.b, 1.0f };
     float4 litColor = mat.DiffuseAlbedo * lightStrength;
 
-    if (intensity > 0.98f)
+    //Creates a highlight based on material shininess and light, camera and normal vectors
+    float3 reverseLightDir = -gLights[0].Direction;
+    if (dot(normalize(reverseLightDir + toEyeW), pin.NormalW) > (0.97f+(gRoughness*0.03f)))
+        litColor.rgb = float3(1.0f,1.0f,1.0f);
+    else if (intensity > 0.7f)
         litColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * litColor;
-    else if (intensity > 0.5f)
+    else if (intensity > 0.35f)
         litColor = float4(0.8f, 0.8f, 0.8f, 1.8f) * litColor;
     else if (intensity > 0.05f)
         litColor = float4(0.4f, 0.4f, 0.4f, 1.0f) * litColor;
     else if (intensity < 0.05f)
         litColor = float4(0.2f, 0.2f, 0.2f, 1.0f) * litColor;
-
+    //Generates an outline based on the material and angle with the camera
     if (dot(toEyeW, pin.NormalW) < gOutlineThreshold) litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
+    
     // Common convention to take alpha from diffuse material.
     litColor.a = gDiffuseAlbedo.a;
 
