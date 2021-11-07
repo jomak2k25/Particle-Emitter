@@ -100,15 +100,34 @@ float4 PS(VertexOut pin) : SV_Target
     float3 toEyeW = normalize(gEyePosW - pin.PosW);
 
 	// Indirect lighting.
-    float4 ambient = gAmbientLight*gDiffuseAlbedo;
 
     const float shininess = 1.0f - gRoughness;
     Material mat = { gDiffuseAlbedo, gFresnelR0, shininess };
+
+    float intensity = 0.0f;
+    //for (int i = 0; i < NUM_DIR_LIGHTS; ++i)
+    //{
+        intensity += dot(normalize(-gLights[0].Direction), pin.NormalW);
+    //}
+    intensity = intensity;
+    if (intensity < 0.0f)
+        intensity = 0.0f;
+
+
     float3 shadowFactor = 1.0f;
     float4 directLight = ComputeLighting(gLights, mat, pin.PosW, 
         pin.NormalW, toEyeW, shadowFactor);
 
     float4 litColor = directLight;
+
+    if (intensity > 0.98f)
+        litColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * litColor;
+    else if (intensity > 0.5f)
+        litColor = float4(0.8f, 0.8f, 0.8f, 1.8f) * litColor;
+    else if (intensity > 0.05f)
+        litColor = float4(0.4f, 0.4f, 0.4f, 1.0f) * litColor;
+    else if (intensity < 0.05f)
+        litColor = float4(0.1f, 0.1f, 0.1f, 1.0f) * litColor;
 
     // Common convention to take alpha from diffuse material.
     litColor.a = gDiffuseAlbedo.a;
