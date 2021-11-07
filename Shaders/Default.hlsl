@@ -6,7 +6,7 @@
 
 // Defaults for number of lights.
 #ifndef NUM_DIR_LIGHTS
-    #define NUM_DIR_LIGHTS 3
+    #define NUM_DIR_LIGHTS 1
 #endif
 
 #ifndef NUM_POINT_LIGHTS
@@ -115,10 +115,12 @@ float4 PS(VertexOut pin) : SV_Target
 
 
     float3 shadowFactor = 1.0f;
-    float4 directLight = ComputeLighting(gLights, mat, pin.PosW, 
-        pin.NormalW, toEyeW, shadowFactor);
 
-    float4 litColor = directLight;
+    //float4 directLight = ComputeLighting(gLights, mat, pin.PosW, 
+      //  pin.NormalW, toEyeW, shadowFactor);
+    //float3 directLight = mat.DiffuseAlbedo.rgb * gLights[0].Strength;
+    float4 lightStrength = { gLights[0].Strength.r,gLights[0].Strength.g, gLights[0].Strength.b, 1.0f };
+    float4 litColor = mat.DiffuseAlbedo * lightStrength;
 
     if (intensity > 0.98f)
         litColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * litColor;
@@ -127,7 +129,7 @@ float4 PS(VertexOut pin) : SV_Target
     else if (intensity > 0.05f)
         litColor = float4(0.4f, 0.4f, 0.4f, 1.0f) * litColor;
     else if (intensity < 0.05f)
-        litColor = float4(0.1f, 0.1f, 0.1f, 1.0f) * litColor;
+        litColor = float4(0.2f, 0.2f, 0.2f, 1.0f) * litColor;
 
     // Common convention to take alpha from diffuse material.
     litColor.a = gDiffuseAlbedo.a;
