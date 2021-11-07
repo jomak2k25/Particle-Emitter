@@ -100,20 +100,16 @@ float4 PS(VertexOut pin) : SV_Target
     // Vector from point being lit to eye. 
     float3 toEyeW = normalize(gEyePosW - pin.PosW);
 
-	// Indirect lighting.
-
-    const float shininess = 1.0f - gRoughness;
-    Material mat = { gDiffuseAlbedo, gFresnelR0, shininess };
-
+    //Calculates the intensity of the light based on the angle between the normal and the light vector
     float intensity = 0.0f;
     intensity += dot(normalize(-gLights[0].Direction), pin.NormalW);
     intensity = intensity;
     if (intensity < 0.0f)
         intensity = 0.0f;
 
-
+    //Create the initial pixel colour normally, multiplying the albedo by the light's diffuse colour
     float4 lightStrength = { gLights[0].Strength.r,gLights[0].Strength.g, gLights[0].Strength.b, 1.0f };
-    float4 litColor = mat.DiffuseAlbedo * lightStrength;
+    float4 litColor = gDiffuseAlbedo * lightStrength;
 
     //Creates a highlight based on material shininess and light, camera and normal vectors
     float3 reverseLightDir = -gLights[0].Direction;
