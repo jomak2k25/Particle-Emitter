@@ -738,6 +738,7 @@ void LitColumnsApp::BuildMaterials()
 	bricks0->DiffuseAlbedo = XMFLOAT4(Colors::ForestGreen);
 	bricks0->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
 	bricks0->Roughness = 0.1f;
+	bricks0->OutlineThreshold = 0.3f;
 
 	auto stone0 = std::make_unique<Material>();
 	stone0->Name = "stone0";
@@ -747,9 +748,18 @@ void LitColumnsApp::BuildMaterials()
 	stone0->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
 	stone0->Roughness = 0.3f;
  
+	auto stone1 = std::make_unique<Material>();
+	stone1->Name = "stone1";
+	stone1->MatCBIndex = 2;
+	stone1->DiffuseSrvHeapIndex = 1;
+	stone1->DiffuseAlbedo = XMFLOAT4(Colors::LightSteelBlue);
+	stone1->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
+	stone1->Roughness = 0.3f;
+	stone1->OutlineThreshold = 0.3f;
+
 	auto tile0 = std::make_unique<Material>();
 	tile0->Name = "tile0";
-	tile0->MatCBIndex = 2;
+	tile0->MatCBIndex = 3;
 	tile0->DiffuseSrvHeapIndex = 2;
 	tile0->DiffuseAlbedo = XMFLOAT4(Colors::LightGray);
 	tile0->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
@@ -757,7 +767,7 @@ void LitColumnsApp::BuildMaterials()
 
 	auto skullMat = std::make_unique<Material>();
 	skullMat->Name = "skullMat";
-	skullMat->MatCBIndex = 3;
+	skullMat->MatCBIndex = 4;
 	skullMat->DiffuseSrvHeapIndex = 3;
 	skullMat->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	skullMat->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05);
@@ -766,6 +776,7 @@ void LitColumnsApp::BuildMaterials()
 	
 	mMaterials["bricks0"] = std::move(bricks0);
 	mMaterials["stone0"] = std::move(stone0);
+	mMaterials["stone1"] = std::move(stone1);
 	mMaterials["tile0"] = std::move(tile0);
 	mMaterials["skullMat"] = std::move(skullMat);
 }
@@ -846,7 +857,7 @@ void LitColumnsApp::BuildRenderItems()
 		XMStoreFloat4x4(&leftSphereRitem->World, leftSphereWorld);
 		leftSphereRitem->TexTransform = MathHelper::Identity4x4();
 		leftSphereRitem->ObjCBIndex = objCBIndex++;
-		leftSphereRitem->Mat = mMaterials["stone0"].get();
+		leftSphereRitem->Mat = mMaterials["stone1"].get();
 		leftSphereRitem->Geo = mGeometries["shapeGeo"].get();
 		leftSphereRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		leftSphereRitem->IndexCount = leftSphereRitem->Geo->DrawArgs["sphere"].IndexCount;
@@ -856,7 +867,7 @@ void LitColumnsApp::BuildRenderItems()
 		XMStoreFloat4x4(&rightSphereRitem->World, rightSphereWorld);
 		rightSphereRitem->TexTransform = MathHelper::Identity4x4();
 		rightSphereRitem->ObjCBIndex = objCBIndex++;
-		rightSphereRitem->Mat = mMaterials["stone0"].get();
+		rightSphereRitem->Mat = mMaterials["stone1"].get();
 		rightSphereRitem->Geo = mGeometries["shapeGeo"].get();
 		rightSphereRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		rightSphereRitem->IndexCount = rightSphereRitem->Geo->DrawArgs["sphere"].IndexCount;
