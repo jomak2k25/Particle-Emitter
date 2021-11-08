@@ -100,7 +100,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
-	std::unordered_map<std::string, std::unique_ptr<Material>> mMaterials;
+	std::unordered_map<std::string, std::unique_ptr<ToonMaterial>> mMaterials;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 	std::unordered_map<std::string, ComPtr<ID3DBlob>> mShaders;
 
@@ -385,12 +385,12 @@ void LitColumnsApp::UpdateMaterialCBs(const GameTimer& gt)
 	{
 		// Only update the cbuffer data if the constants have changed.  If the cbuffer
 		// data changes, it needs to be updated for each FrameResource.
-		Material* mat = e.second.get();
+		ToonMaterial* mat = e.second.get();
 		if(mat->NumFramesDirty > 0)
 		{
 			XMMATRIX matTransform = XMLoadFloat4x4(&mat->MatTransform);
 
-			MaterialConstants matConstants;
+			ToonMaterialConstants matConstants;
 			matConstants.DiffuseAlbedo = mat->DiffuseAlbedo;
 			matConstants.FresnelR0 = mat->FresnelR0;
 			matConstants.Roughness = mat->Roughness;
@@ -727,7 +727,7 @@ void LitColumnsApp::BuildFrameResources()
 
 void LitColumnsApp::BuildMaterials()
 {
-	auto bricks0 = std::make_unique<Material>();
+	auto bricks0 = std::make_unique<ToonMaterial>();
 	bricks0->Name = "bricks0";
 	bricks0->MatCBIndex = 0;
 	bricks0->DiffuseSrvHeapIndex = 0;
@@ -736,7 +736,7 @@ void LitColumnsApp::BuildMaterials()
 	bricks0->Roughness = 0.1f;
 	bricks0->OutlineThreshold = 0.3f;
 
-	auto stone0 = std::make_unique<Material>();
+	auto stone0 = std::make_unique<ToonMaterial>();
 	stone0->Name = "stone0";
 	stone0->MatCBIndex = 1;
 	stone0->DiffuseSrvHeapIndex = 1;
@@ -744,7 +744,7 @@ void LitColumnsApp::BuildMaterials()
 	stone0->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
 	stone0->Roughness = 0.3f;
  
-	auto stone1 = std::make_unique<Material>();
+	auto stone1 = std::make_unique<ToonMaterial>();
 	stone1->Name = "stone1";
 	stone1->MatCBIndex = 2;
 	stone1->DiffuseSrvHeapIndex = 1;
@@ -753,7 +753,7 @@ void LitColumnsApp::BuildMaterials()
 	stone1->Roughness = 0.3f;
 	stone1->OutlineThreshold = 0.3f;
 
-	auto tile0 = std::make_unique<Material>();
+	auto tile0 = std::make_unique<ToonMaterial>();
 	tile0->Name = "tile0";
 	tile0->MatCBIndex = 3;
 	tile0->DiffuseSrvHeapIndex = 2;
@@ -761,7 +761,7 @@ void LitColumnsApp::BuildMaterials()
 	tile0->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
 	tile0->Roughness = 0.2f;
 
-	auto skullMat = std::make_unique<Material>();
+	auto skullMat = std::make_unique<ToonMaterial>();
 	skullMat->Name = "skullMat";
 	skullMat->MatCBIndex = 4;
 	skullMat->DiffuseSrvHeapIndex = 3;
@@ -884,7 +884,7 @@ void LitColumnsApp::BuildRenderItems()
 void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-    UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(MaterialConstants));
+    UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ToonMaterialConstants));
  
 	auto objectCB = mCurrFrameResource->ObjectCB->Resource();
 	auto matCB = mCurrFrameResource->MaterialCB->Resource();

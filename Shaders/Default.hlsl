@@ -100,21 +100,20 @@ float4 PS(VertexOut pin) : SV_Target
     // Vector from point being lit to eye. 
     float3 toEyeW = normalize(gEyePosW - pin.PosW);
 
+    //Vector in the opposit direction of light
+    float3 toLightW = normalize(-gLights[0].Direction);
+
     //Calculates the intensity of the light based on the angle between the normal and the light vector
     float intensity = 0.0f;
-    intensity += dot(normalize(-gLights[0].Direction), pin.NormalW);
-    intensity = intensity;
-    if (intensity < 0.0f)
-        intensity = 0.0f;
+    intensity += dot(toLightW, pin.NormalW);
 
     //Create the initial pixel colour normally, multiplying the albedo by the light's diffuse colour
-    float4 lightStrength = { gLights[0].Strength.r,gLights[0].Strength.g, gLights[0].Strength.b, 1.0f };
-    float4 litColor = gDiffuseAlbedo * lightStrength;
+    float4 litColor = gDiffuseAlbedo * float4(gLights[0].Strength.rgb, 1.0f);
 
     //Creates a highlight based on material shininess and light, camera and normal vectors
-    float3 reverseLightDir = -gLights[0].Direction;
-    if (dot(normalize(reverseLightDir + toEyeW), pin.NormalW) > (0.97f+(gRoughness*0.03f)))
-        litColor.rgb = float3(1.0f,1.0f,1.0f);
+    if (dot(normalize(toLightW + toEyeW), pin.NormalW) > (0.97f+(gRoughness*0.03f)))
+        litColor.rgb = clamp((gLights[0].Strength*2),0.0f,1.0f);
+    //Defines brackets of intensity used to define how illuminated a pixel fragment will be
     else if (intensity > 0.7f)
         litColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * litColor;
     else if (intensity > 0.35f)

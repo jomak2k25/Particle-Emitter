@@ -3,6 +3,7 @@
 #include "../../Common/d3dUtil.h"
 #include "../../Common/MathHelper.h"
 #include "../../Common/UploadBuffer.h"
+#include "ToonMaterials.h"
 
 struct ObjectConstants
 {
@@ -61,7 +62,7 @@ public:
     // that reference it.  So each frame needs their own cbuffers.
    // std::unique_ptr<UploadBuffer<FrameConstants>> FrameCB = nullptr;
     std::unique_ptr<UploadBuffer<PassConstants>> PassCB = nullptr;
-    std::unique_ptr<UploadBuffer<MaterialConstants>> MaterialCB = nullptr;
+    std::unique_ptr<UploadBuffer<ToonMaterialConstants>> MaterialCB = nullptr;
     std::unique_ptr<UploadBuffer<ObjectConstants>> ObjectCB = nullptr;
 
     // Fence value to mark commands up to this fence point.  This lets us
