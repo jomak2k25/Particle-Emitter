@@ -9,6 +9,8 @@
 #include "Common/GeometryGenerator.h"
 #include "FrameResource.h"
 
+#include "ParticleEmitter.h"
+
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
@@ -52,34 +54,19 @@ struct RenderItem
     int BaseVertexLocation = 0;
 };
 
-struct particleItems
+struct particle
 {
-	particleItems() = default;
-
-	// World matrix of the shape that describes the object's local space
-	// relative to the world space, which defines the position, orientation,
-	// and scale of the object in the world.
-	XMFLOAT4X4 World = MathHelper::Identity4x4();
-
-	// Dirty flag indicating the object data has changed and we need to update the constant buffer.
-	// Because we have an object cbuffer for each FrameResource, we have to apply the
-	// update to each FrameResource.  Thus, when we modify obect data we should set 
-	// NumFramesDirty = gNumFrameResources so that each frame resource gets the update.
-	int NumFramesDirty = gNumFrameResources;
-
-	// Index into GPU constant buffer corresponding to the ObjectCB for this render item.
-	UINT ObjCBIndex = -1;
-
-	MeshGeometry* Geo = nullptr;
-
-	// Primitive topology.
-	D3D12_PRIMITIVE_TOPOLOGY PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	// DrawIndexedInstanced parameters.
-	UINT IndexCount = 0;
-	UINT StartIndexLocation = 0;
-	int BaseVertexLocation = 0;
+	RenderItem		m_renderItem;
+	XMFLOAT3		m_vel;
+	float			m_age;
+	bool			m_alive;
+	particle()
+		:m_renderItem(), m_vel(0.0f,0.0f,0.0f), m_age(0.0f), m_alive(false)
+	{}
 };
+
+typedef ParticleEmitter<particle, Emission_policies::SphereEmission,
+	Update_policies::Constant, Deletion_policies::LifeSpan> BasicParticleEmitter;
 
 class LitColumnsApp : public D3DApp
 {
@@ -116,6 +103,7 @@ private:
     void BuildMaterials();
     void BuildRenderItems();
     void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+	//void DrawParticleEmitter(ID3D12GraphicsCommandList* cmdList, BasicParticleEmitter emitter);
  
 private:
 
@@ -140,6 +128,8 @@ private:
  
 	// List of all the render items.
 	std::vector<std::unique_ptr<RenderItem>> mAllRitems;
+
+	ParticleEmitter<particle, Emission_policies::SphereEmission, Update_policies::Constant, Deletion_policies::LifeSpan> mParticleEmitter;
 
 	// Render items divided by PSO.
 	std::vector<RenderItem*> mOpaqueRitems;
@@ -289,6 +279,7 @@ void LitColumnsApp::Draw(const GameTimer& gt)
 	mCommandList->SetGraphicsRootConstantBufferView(2, passCB->GetGPUVirtualAddress());
 
     DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+	mParticleEmitter.DrawParticles(mCommandList.Get(), mCurrFrameResource->ObjectCB->Resource(), mCurrFrameResource->MaterialCB->Resource());
 
     // Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -906,6 +897,17 @@ void LitColumnsApp::BuildRenderItems()
 		mAllRitems.push_back(std::move(rightSphereRitem));
 	}
 
+	particle initParticle;
+	initParticle.m_renderItem.TexTransform = MathHelper::Identity4x4();
+	initParticle.m_renderItem.ObjCBIndex = objCBIndex++;
+	initParticle.m_renderItem.Mat = mMaterials["stone1"].get();
+	initParticle.m_renderItem.Geo = mGeometries["shapeGeo"].get();
+	initParticle.m_renderItem.PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	initParticle.m_renderItem.IndexCount = initParticle.m_renderItem.Geo->DrawArgs["sphere"].IndexCount;
+	initParticle.m_renderItem.StartIndexLocation = initParticle.m_renderItem.Geo->DrawArgs["sphere"].StartIndexLocation;
+	initParticle.m_renderItem.BaseVertexLocation = initParticle.m_renderItem.Geo->DrawArgs["sphere"].BaseVertexLocation;
+
+	mParticleEmitter.Init(initParticle);
 	// All the render items are opaque.
 	for(auto& e : mAllRitems)
 		mOpaqueRitems.push_back(e.get());
@@ -937,3 +939,34 @@ void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
         cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
     }
 }
+
+//void LitColumnsApp::DrawParticleEmitter(ID3D12GraphicsCommandList* cmdList, BasicParticleEmitter emitter)
+//{
+//
+//	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
+//	UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ToonMaterialConstants));
+//
+//	auto particles = emitter.GetParticles();
+//
+//	// For each render item...
+//	for (size_t i = 0; i < particles.size(); ++i)
+//	{
+//		particle p = particles[i];
+//		if (p.m_alive)
+//		{
+//
+//			cmdList->IASetVertexBuffers(0, 1, &p.m_renderItem->sGeo->VertexBufferView());
+//			cmdList->IASetIndexBuffer(&p.m_renderItem->Geo->IndexBufferView());
+//			cmdList->IASetPrimitiveTopology(p.m_renderItem->PrimitiveType);
+//
+//			D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objCBResource->GetGPUVirtualAddress() + p.m_renderItem->ObjCBIndex * objCBByteSize;
+//			D3D12_GPU_VIRTUAL_ADDRESS matCBAddress = matCBResource->GetGPUVirtualAddress() + p.m_renderItem->Mat->MatCBIndex * matCBByteSize;
+//
+//			cmdList->SetGraphicsRootConstantBufferView(0, objCBAddress);
+//			cmdList->SetGraphicsRootConstantBufferView(1, matCBAddress);
+//
+//			cmdList->DrawIndexedInstanced(p.m_renderItem->IndexCount, 1, p.m_renderItem->StartIndexLocation, p.m_renderItem->BaseVertexLocation, 0);
+//
+//		}
+//	}
+//}
