@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Common/d3dUtil.h"
+#include "Common/d3dUtil.h"
 
 
 struct ToonMaterialConstants : public MaterialConstants

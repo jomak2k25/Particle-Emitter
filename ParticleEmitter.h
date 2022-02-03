@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include "../../Common/MathHelper.h"
 
 struct Vector3Float
 {
