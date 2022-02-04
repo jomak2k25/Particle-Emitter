@@ -940,33 +940,3 @@ void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
     }
 }
 
-//void LitColumnsApp::DrawParticleEmitter(ID3D12GraphicsCommandList* cmdList, BasicParticleEmitter emitter)
-//{
-//
-//	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-//	UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ToonMaterialConstants));
-//
-//	auto particles = emitter.GetParticles();
-//
-//	// For each render item...
-//	for (size_t i = 0; i < particles.size(); ++i)
-//	{
-//		particle p = particles[i];
-//		if (p.m_alive)
-//		{
-//
-//			cmdList->IASetVertexBuffers(0, 1, &p.m_renderItem->sGeo->VertexBufferView());
-//			cmdList->IASetIndexBuffer(&p.m_renderItem->Geo->IndexBufferView());
-//			cmdList->IASetPrimitiveTopology(p.m_renderItem->PrimitiveType);
-//
-//			D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objCBResource->GetGPUVirtualAddress() + p.m_renderItem->ObjCBIndex * objCBByteSize;
-//			D3D12_GPU_VIRTUAL_ADDRESS matCBAddress = matCBResource->GetGPUVirtualAddress() + p.m_renderItem->Mat->MatCBIndex * matCBByteSize;
-//
-//			cmdList->SetGraphicsRootConstantBufferView(0, objCBAddress);
-//			cmdList->SetGraphicsRootConstantBufferView(1, matCBAddress);
-//
-//			cmdList->DrawIndexedInstanced(p.m_renderItem->IndexCount, 1, p.m_renderItem->StartIndexLocation, p.m_renderItem->BaseVertexLocation, 0);
-//
-//		}
-//	}
-//}
