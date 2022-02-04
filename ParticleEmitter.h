@@ -105,7 +105,6 @@ public:
 	void Init(Particle initParticle)
 	{
 		std::fill(m_vParticles.begin(), m_vParticles.end(), initParticle);
-		m_vParticles.push_back();
 		//Temporary
 		m_vParticles[0].m_alive = true;
 		XMStoreFloat4x4(&m_vParticles[0].m_renderItem.World, DirectX::XMMatrixTranslation(-3.0f, 5.5f, 5.0f));
