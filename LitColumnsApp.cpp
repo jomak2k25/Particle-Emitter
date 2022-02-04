@@ -103,7 +103,6 @@ private:
     void BuildMaterials();
     void BuildRenderItems();
     void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
-	//void DrawParticleEmitter(ID3D12GraphicsCommandList* cmdList, BasicParticleEmitter emitter);
  
 private:
 
@@ -397,6 +396,8 @@ void LitColumnsApp::UpdateObjectCBs(const GameTimer& gt)
 			e->NumFramesDirty--;
 		}
 	}
+
+	mParticleEmitter.UpdateParticleCBs(currObjectCB);
 }
 
 void LitColumnsApp::UpdateMaterialCBs(const GameTimer& gt)
@@ -742,7 +743,7 @@ void LitColumnsApp::BuildFrameResources()
     for(int i = 0; i < gNumFrameResources; ++i)
     {
         mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
-            1, (UINT)mAllRitems.size(), (UINT)mMaterials.size()));
+            1, (UINT)mAllRitems.size() +(UINT)mParticleEmitter.GetParticles().size(), (UINT)mMaterials.size()));
     }
 }
 
@@ -897,9 +898,13 @@ void LitColumnsApp::BuildRenderItems()
 		mAllRitems.push_back(std::move(rightSphereRitem));
 	}
 
+	// All the render items are opaque.
+	for(auto& e : mAllRitems)
+		mOpaqueRitems.push_back(e.get());
+
 	particle initParticle;
 	initParticle.m_renderItem.TexTransform = MathHelper::Identity4x4();
-	initParticle.m_renderItem.ObjCBIndex = objCBIndex++;
+	initParticle.m_renderItem.ObjCBIndex = ++objCBIndex;
 	initParticle.m_renderItem.Mat = mMaterials["stone1"].get();
 	initParticle.m_renderItem.Geo = mGeometries["shapeGeo"].get();
 	initParticle.m_renderItem.PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -908,9 +913,6 @@ void LitColumnsApp::BuildRenderItems()
 	initParticle.m_renderItem.BaseVertexLocation = initParticle.m_renderItem.Geo->DrawArgs["sphere"].BaseVertexLocation;
 
 	mParticleEmitter.Init(initParticle);
-	// All the render items are opaque.
-	for(auto& e : mAllRitems)
-		mOpaqueRitems.push_back(e.get());
 }
 
 void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)

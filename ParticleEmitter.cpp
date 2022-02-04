@@ -1,7 +1,5 @@
 #include "ParticleEmitter.h"
 
-#include "FrameResource.h"
-
 void Emission_policies::SphereEmission::Emit(float deltaTime)
 {
 	

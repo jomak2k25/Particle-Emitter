@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <d3d12.h>
 #include <DirectXMath.h>
+#include "FrameResource.h"
 
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
@@ -24,7 +25,7 @@ namespace Emission_policies
 		XMFLOAT3	m_dir;		//Direction of the cone
 		float			m_maxAngle;	//Maximum angle of emission around the direction
 	protected:
-		void Emit(float deltaTime){};
+		void Emit(float deltaTime){}
 	};
 	class SphereEmission			//Simply emits randomly in all directions from a point
 	{
@@ -35,7 +36,7 @@ namespace Emission_policies
 	{
 		Vector3Float m_normal;		//The normal of the circle can be used to 
 	protected:
-		void Emit(float deltaTime){};
+		void Emit(float deltaTime){}
 	};
 }
 
@@ -46,7 +47,7 @@ namespace Update_policies			//These are used to define how the particles will mo
 		float m_initVel;			//The initial velocity of the particles when emitted
 		float m_acceleration;		//The rate of acceleration for particles
 	protected:
-		void UpdatePositions(float deltaTime){};
+		void UpdatePositions(float deltaTime){}
 	};
 	class Constant
 	{
@@ -59,7 +60,7 @@ namespace Update_policies			//These are used to define how the particles will mo
 		float m_speed;				//The velocity of emitted particles
 		float m_gravity;			//The strength of gravity for the particles
 	protected:
-		void UpdatePositions(float deltaTime){};
+		void UpdatePositions(float deltaTime){}
 	};
 }
 
@@ -75,13 +76,13 @@ namespace Deletion_policies			//These are used to define how when particles are 
 	{
 		XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
-		void DeleteParticles(){};
+		void DeleteParticles(){}
 	};
 	class SphereBoundaries
 	{
 		float m_maxDistance;		//Defines how far a particle can travel from the emitted befor it is culled
 	protected:
-		void DeleteParticles(){};
+		void DeleteParticles(){}
 	};
 }
 
@@ -104,26 +105,46 @@ public:
 	void Init(Particle initParticle)
 	{
 		std::fill(m_vParticles.begin(), m_vParticles.end(), initParticle);
+		m_vParticles.push_back();
 		//Temporary
 		m_vParticles[0].m_alive = true;
-		XMStoreFloat4x4(&m_vParticles[0].m_renderItem.World, DirectX::XMMatrixTranslation(-3.0f, 1.5f, -10.0f + 5.0f));
+		XMStoreFloat4x4(&m_vParticles[0].m_renderItem.World, DirectX::XMMatrixTranslation(-3.0f, 5.5f, 5.0f));
 	}
 	void Update(float deltaTime)
 	{
 		Emit();
 		UpdatePositions(deltaTime);
 		DeleteParticles();
-	};
+	}
 
+	void UpdateParticleCBs(UploadBuffer<ObjectConstants>* currObjectCB)
+	{
+		for (auto& p : m_vParticles)
+		{
+			// Only update the cbuffer data if the constants have changed.  
+			// This needs to be tracked per frame resource.
+			if (p.m_renderItem.NumFramesDirty > 0)
+			{
+				XMMATRIX world = XMLoadFloat4x4(&p.m_renderItem.World);
+				XMMATRIX texTransform = XMLoadFloat4x4(&p.m_renderItem.TexTransform);
+
+				ObjectConstants objConstants;
+				XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
+				XMStoreFloat4x4(&objConstants.TexTransform, XMMatrixTranspose(texTransform));
+
+				currObjectCB->CopyData(p.m_renderItem.ObjCBIndex, objConstants);
+
+				// Next FrameResource need to be updated too.
+				--p.m_renderItem.NumFramesDirty;
+			}
+		}
+	}
 
 	void DrawParticles(ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* objCBResource, ID3D12Resource* matCBResource)
 	{
 		UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 		UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ToonMaterialConstants));
-
-
-
 		// For each render item...
 		for (size_t i = 0; i < m_vParticles.size(); ++i)
 		{
@@ -145,13 +166,15 @@ public:
 
 			}
 		}
-	};
+	}
 
-	void StartEmission(){};
-	void StopEmission(){};
+	void StartEmission(){}
+	void StopEmission(){}
 
-	void SetEmissionRate(){};
-	void SetMaxParticles(){};
+	void SetEmissionRate(){}
+	void SetMaxParticles(){}
 
-	void SetPosition(XMFLOAT3 newPos) { m_pos = newPos; };
+	void SetPosition(XMFLOAT3 newPos) { m_pos = newPos; }
+
+	std::vector<Particle>& GetParticles() { return m_vParticles; }
 };
