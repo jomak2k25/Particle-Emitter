@@ -7,7 +7,6 @@
 #include "Common/MathHelper.h"
 #include "Common/UploadBuffer.h"
 #include "Common/GeometryGenerator.h"
-#include "FrameResource.h"
 
 #include "ParticleEmitter.h"
 
@@ -18,54 +17,7 @@ using namespace DirectX::PackedVector;
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 
-const int gNumFrameResources = 3;
-
-// Lightweight structure stores parameters to draw a shape.  This will
-// vary from app-to-app.
-struct RenderItem
-{
-	RenderItem() = default;
-
-    // World matrix of the shape that describes the object's local space
-    // relative to the world space, which defines the position, orientation,
-    // and scale of the object in the world.
-    XMFLOAT4X4 World = MathHelper::Identity4x4();
-
-	XMFLOAT4X4 TexTransform = MathHelper::Identity4x4();
-
-	// Dirty flag indicating the object data has changed and we need to update the constant buffer.
-	// Because we have an object cbuffer for each FrameResource, we have to apply the
-	// update to each FrameResource.  Thus, when we modify obect data we should set 
-	// NumFramesDirty = gNumFrameResources so that each frame resource gets the update.
-	int NumFramesDirty = gNumFrameResources;
-
-	// Index into GPU constant buffer corresponding to the ObjectCB for this render item.
-	UINT ObjCBIndex = -1;
-
-	Material* Mat = nullptr;
-	MeshGeometry* Geo = nullptr;
-
-    // Primitive topology.
-    D3D12_PRIMITIVE_TOPOLOGY PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-    // DrawIndexedInstanced parameters.
-    UINT IndexCount = 0;
-    UINT StartIndexLocation = 0;
-    int BaseVertexLocation = 0;
-};
-
-struct particle
-{
-	RenderItem		m_renderItem;
-	XMFLOAT3		m_vel;
-	float			m_age;
-	bool			m_alive;
-	particle()
-		:m_renderItem(), m_vel(0.0f,0.0f,0.0f), m_age(0.0f), m_alive(false)
-	{}
-};
-
-typedef ParticleEmitter<particle, Emission_policies::SphereEmission,
+typedef ParticleEmitter<Emission_policies::SphereEmission,
 	Update_policies::Constant, Deletion_policies::LifeSpan> BasicParticleEmitter;
 
 class LitColumnsApp : public D3DApp
@@ -128,7 +80,7 @@ private:
 	// List of all the render items.
 	std::vector<std::unique_ptr<RenderItem>> mAllRitems;
 
-	ParticleEmitter<particle, Emission_policies::SphereEmission, Update_policies::Constant, Deletion_policies::LifeSpan> mParticleEmitter;
+	BasicParticleEmitter mParticleEmitter;
 
 	// Render items divided by PSO.
 	std::vector<RenderItem*> mOpaqueRitems;
@@ -227,7 +179,7 @@ void LitColumnsApp::Update(const GameTimer& gt)
 	UpdateCamera(gt);
 
     // Cycle through the circular frame resource array.
-    mCurrFrameResourceIndex = (mCurrFrameResourceIndex + 1) % gNumFrameResources;
+    mCurrFrameResourceIndex = (mCurrFrameResourceIndex + 1) % g_numFrameResources;
     mCurrFrameResource = mFrameResources[mCurrFrameResourceIndex].get();
 
     // Has the GPU finished processing the commands of the current frame resource?
@@ -240,6 +192,7 @@ void LitColumnsApp::Update(const GameTimer& gt)
         CloseHandle(eventHandle);
     }
 
+	mParticleEmitter.Update(gt.DeltaTime());
 	AnimateMaterials(gt);
 	UpdateObjectCBs(gt);
 	UpdateMaterialCBs(gt);
@@ -740,7 +693,7 @@ void LitColumnsApp::BuildPSOs()
 
 void LitColumnsApp::BuildFrameResources()
 {
-    for(int i = 0; i < gNumFrameResources; ++i)
+    for(int i = 0; i < g_numFrameResources; ++i)
     {
         mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
             1, (UINT)mAllRitems.size() +(UINT)mParticleEmitter.GetParticles().size(), (UINT)mMaterials.size()));
@@ -902,7 +855,7 @@ void LitColumnsApp::BuildRenderItems()
 	for(auto& e : mAllRitems)
 		mOpaqueRitems.push_back(e.get());
 
-	particle initParticle;
+	Particle initParticle;
 	//XMStoreFloat4x4(&initParticle.m_renderItem.World, XMMatrixTranslation(-3.0f, 2.0f, -2.0f));
 	initParticle.m_renderItem.TexTransform = MathHelper::Identity4x4();
 	initParticle.m_renderItem.ObjCBIndex = objCBIndex++;
