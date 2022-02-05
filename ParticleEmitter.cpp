@@ -41,7 +41,7 @@ void Update_policies::Constant::UpdatePositions(float deltaTime, std::vector<Par
 	}
 }
 
-void Deletion_policies::LifeSpan::DeleteParticles(std::vector<Particle>& particles)
+void Deletion_policies::LifeSpan::DeleteParticles(float deltaTime, std::vector<Particle>& particles)
 {
 	
 }

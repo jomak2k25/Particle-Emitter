@@ -95,19 +95,19 @@ namespace Deletion_policies			//These are used to define how when particles are 
 	{
 		float m_maxLifeTime;		//This is used to define how long, in seconds, a particle has before being culled
 	protected:
-		void DeleteParticles(std::vector<Particle>& particles);
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles);
 	};
 	class CubeBoundaries
 	{
 		DirectX::XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
-		void DeleteParticles(std::vector<Particle>& particles){}
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles){}
 	};
 	class SphereBoundaries
 	{
 		float m_maxDistance;		//Defines how far a particle can travel from the emitted befor it is culled
 	protected:
-		void DeleteParticles(std::vector<Particle>& particles){}
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles){}
 	};
 }
 
@@ -141,7 +141,7 @@ public:
 	{
 		Emit(deltaTime, m_vParticles);
 		UpdatePositions(deltaTime, m_vParticles);
-		DeleteParticles(m_vParticles);
+		DeleteParticles(deltaTime, m_vParticles);
 	}
 
 	void UpdateParticleCBs(UploadBuffer<ObjectConstants>* currObjectCB)
