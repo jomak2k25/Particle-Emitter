@@ -20,18 +20,19 @@ struct Vector3Float
 
 struct Particle
 {
-	RenderItem		m_renderItem;
-	DirectX::XMFLOAT3		m_vel;
-	float			m_age;
-	bool			m_alive;
+	RenderItem		render_item;
+	DirectX::XMFLOAT3		direction;
+	float			age;
+	bool			alive;
 	Particle()
-		:m_renderItem(), m_vel(0.0f, 0.0f, 0.0f), m_age(0.0f), m_alive(false)
+		:render_item(), direction(0.0f, 0.0f, 0.0f), age(0.0f), alive(false)
 	{}
+	void Reset() { direction = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f); age = 0.0f; alive = false; }
 };
 
 namespace Emission_policies
 {
-	constexpr float g_default_emit_interval = 0.2f;
+	constexpr float g_defaultEmitInterval = 0.2f;
 	class ConeEmission				//Emits particles in cone shape 
 	{
 		DirectX::XMFLOAT3		m_spawnPos;	//The positon for spawning objects
@@ -51,7 +52,7 @@ namespace Emission_policies
 		float			m_spawnTime;//An accumalative float which totals delta time and is decreased by spawning particles
 	protected:
 		void Emit(float deltaTime, std::vector<Particle>& particles);
-		SphereEmission(DirectX::XMFLOAT3 pos):m_spawnPos(pos), m_emitInterval(g_default_emit_interval), m_spawnTime(0.0f)
+		SphereEmission(DirectX::XMFLOAT3 pos):m_spawnPos(pos), m_emitInterval(g_defaultEmitInterval), m_spawnTime(0.0f)
 		{}
 	};
 	class CircleEmission			//Emits particles in random directions on a plan defined by a normal vector
@@ -128,14 +129,14 @@ public:
 
 	void Init(Particle initParticle)
 	{
-		int cbOffset = initParticle.m_renderItem.ObjCBIndex;
+		int cbOffset = initParticle.render_item.ObjCBIndex;
 		std::generate(m_vParticles.begin(), m_vParticles.end(),[&]() 
 			{Particle p = initParticle;
-			p.m_renderItem.ObjCBIndex = cbOffset++;
+			p.render_item.ObjCBIndex = cbOffset++;
 			return p;});
-		DirectX::XMStoreFloat4x4(&m_vParticles[0].m_renderItem.World, DirectX::XMMatrixTranslation(m_pos.x, m_pos.y, m_pos.z));
-		m_vParticles[0].m_vel = DirectX::XMFLOAT3(0.2f, 0.2f, 0.0f);
-		m_vParticles[0].m_alive = true;
+		DirectX::XMStoreFloat4x4(&m_vParticles[0].render_item.World, DirectX::XMMatrixTranslation(m_pos.x, m_pos.y, m_pos.z));
+		m_vParticles[0].direction = DirectX::XMFLOAT3(0.2f, 0.2f, 0.0f);
+		m_vParticles[0].alive = true;
 	}
 	void Update(float deltaTime)
 	{
@@ -150,19 +151,19 @@ public:
 		{
 			// Only update the cbuffer data if the constants have changed.  
 			// This needs to be tracked per frame resource.
-			if (p.m_renderItem.NumFramesDirty > 0)
+			if (p.render_item.NumFramesDirty > 0)
 			{
-				DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&p.m_renderItem.World);
-				DirectX::XMMATRIX texTransform = DirectX::XMLoadFloat4x4(&p.m_renderItem.TexTransform);
+				DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&p.render_item.World);
+				DirectX::XMMATRIX texTransform = DirectX::XMLoadFloat4x4(&p.render_item.TexTransform);
 
 				ObjectConstants objConstants;
 				DirectX::XMStoreFloat4x4(&objConstants.World, DirectX::XMMatrixTranspose(world));
 				DirectX::XMStoreFloat4x4(&objConstants.TexTransform, DirectX::XMMatrixTranspose(texTransform));
 
-				currObjectCB->CopyData(p.m_renderItem.ObjCBIndex, objConstants);
+				currObjectCB->CopyData(p.render_item.ObjCBIndex, objConstants);
 
 				// Next FrameResource need to be updated too.
-				--p.m_renderItem.NumFramesDirty;
+				--p.render_item.NumFramesDirty;
 			}
 		}
 	}
@@ -176,20 +177,20 @@ public:
 		for (size_t i = 0; i < m_vParticles.size(); ++i)
 		{
 			Particle p = m_vParticles[i];
-			if (p.m_alive)
+			if (p.alive)
 			{
 
-				cmdList->IASetVertexBuffers(0, 1, &p.m_renderItem.Geo->VertexBufferView());
-				cmdList->IASetIndexBuffer(&p.m_renderItem.Geo->IndexBufferView());
-				cmdList->IASetPrimitiveTopology(p.m_renderItem.PrimitiveType);
+				cmdList->IASetVertexBuffers(0, 1, &p.render_item.Geo->VertexBufferView());
+				cmdList->IASetIndexBuffer(&p.render_item.Geo->IndexBufferView());
+				cmdList->IASetPrimitiveTopology(p.render_item.PrimitiveType);
 
-				D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objCBResource->GetGPUVirtualAddress() + p.m_renderItem.ObjCBIndex * objCBByteSize;
-				D3D12_GPU_VIRTUAL_ADDRESS matCBAddress = matCBResource->GetGPUVirtualAddress() + p.m_renderItem.Mat->MatCBIndex * matCBByteSize;
+				D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objCBResource->GetGPUVirtualAddress() + p.render_item.ObjCBIndex * objCBByteSize;
+				D3D12_GPU_VIRTUAL_ADDRESS matCBAddress = matCBResource->GetGPUVirtualAddress() + p.render_item.Mat->MatCBIndex * matCBByteSize;
 
 				cmdList->SetGraphicsRootConstantBufferView(0, objCBAddress);
 				cmdList->SetGraphicsRootConstantBufferView(1, matCBAddress);
 
-				cmdList->DrawIndexedInstanced(p.m_renderItem.IndexCount, 1, p.m_renderItem.StartIndexLocation, p.m_renderItem.BaseVertexLocation, 0);
+				cmdList->DrawIndexedInstanced(p.render_item.IndexCount, 1, p.render_item.StartIndexLocation, p.render_item.BaseVertexLocation, 0);
 
 			}
 		}

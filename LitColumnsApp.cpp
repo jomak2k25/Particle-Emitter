@@ -1,6 +1,7 @@
 //***************************************************************************************
 // LitColumnsApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
 //	Modified by James Smith
+//	Creates a DirectX app, modified to display Toon Shading and Particle Emitter
 //***************************************************************************************
 
 #include "Common/d3dApp.h"
@@ -857,14 +858,14 @@ void LitColumnsApp::BuildRenderItems()
 
 	Particle initParticle;
 	//XMStoreFloat4x4(&initParticle.m_renderItem.World, XMMatrixTranslation(-3.0f, 2.0f, -2.0f));
-	initParticle.m_renderItem.TexTransform = MathHelper::Identity4x4();
-	initParticle.m_renderItem.ObjCBIndex = objCBIndex++;
-	initParticle.m_renderItem.Mat = mMaterials["stone1"].get();
-	initParticle.m_renderItem.Geo = mGeometries["shapeGeo"].get();
-	initParticle.m_renderItem.PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	initParticle.m_renderItem.IndexCount = initParticle.m_renderItem.Geo->DrawArgs["sphere"].IndexCount;
-	initParticle.m_renderItem.StartIndexLocation = initParticle.m_renderItem.Geo->DrawArgs["sphere"].StartIndexLocation;
-	initParticle.m_renderItem.BaseVertexLocation = initParticle.m_renderItem.Geo->DrawArgs["sphere"].BaseVertexLocation;
+	initParticle.render_item.TexTransform = MathHelper::Identity4x4();
+	initParticle.render_item.ObjCBIndex = objCBIndex++;
+	initParticle.render_item.Mat = mMaterials["stone1"].get();
+	initParticle.render_item.Geo = mGeometries["shapeGeo"].get();
+	initParticle.render_item.PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	initParticle.render_item.IndexCount = initParticle.render_item.Geo->DrawArgs["sphere"].IndexCount;
+	initParticle.render_item.StartIndexLocation = initParticle.render_item.Geo->DrawArgs["sphere"].StartIndexLocation;
+	initParticle.render_item.BaseVertexLocation = initParticle.render_item.Geo->DrawArgs["sphere"].BaseVertexLocation;
 
 	mParticleEmitter.Init(initParticle);
 }

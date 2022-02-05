@@ -16,9 +16,17 @@ void Emission_policies::SphereEmission::Emit(float deltaTime, std::vector<Partic
 	}
 	for(Particle& p : particles)
 	{
-		if(!p.m_alive)
+		if(!p.alive)
 		{
-			//Spawn particle here
+			//Resetting the particle and moving it back to the position of the particle emitter
+			p.Reset();
+			p.alive = true;
+			DirectX::XMStoreFloat4x4(&p.render_item.World, DirectX::XMMatrixTranslation(m_spawnPos.x, m_spawnPos.y, m_spawnPos.z));
+
+			//Give the particle its direction
+
+
+
 			if(--spawnCount == 0)
 			{
 				break;
@@ -31,12 +39,12 @@ void Update_policies::Constant::UpdatePositions(float deltaTime, std::vector<Par
 {
 	for(Particle& p : particles)
 	{
-		if(p.m_alive)
+		if(p.alive)
 		{
-			DirectX::XMStoreFloat4x4(&p.m_renderItem.World,
-				DirectX::XMMatrixMultiply(XMLoadFloat4x4(&p.m_renderItem.World), 
-					DirectX::XMMatrixTranslation(p.m_vel.x * deltaTime, p.m_vel.y * deltaTime, p.m_vel.z * deltaTime)));
-			p.m_renderItem.NumFramesDirty = g_numFrameResources;
+			DirectX::XMStoreFloat4x4(&p.render_item.World,
+				DirectX::XMMatrixMultiply(XMLoadFloat4x4(&p.render_item.World), 
+					DirectX::XMMatrixTranslation(p.direction.x * deltaTime, p.direction.y * deltaTime, p.direction.z * deltaTime)));
+			p.render_item.NumFramesDirty = g_numFrameResources;
 		}
 	}
 }
