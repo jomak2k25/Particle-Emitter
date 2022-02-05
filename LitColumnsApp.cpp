@@ -903,7 +903,7 @@ void LitColumnsApp::BuildRenderItems()
 		mOpaqueRitems.push_back(e.get());
 
 	particle initParticle;
-	XMStoreFloat4x4(&initParticle.m_renderItem.World, XMMatrixTranslation(-3.0f, 2.0f, -2.0f));
+	//XMStoreFloat4x4(&initParticle.m_renderItem.World, XMMatrixTranslation(-3.0f, 2.0f, -2.0f));
 	initParticle.m_renderItem.TexTransform = MathHelper::Identity4x4();
 	initParticle.m_renderItem.ObjCBIndex = objCBIndex++;
 	initParticle.m_renderItem.Mat = mMaterials["stone1"].get();

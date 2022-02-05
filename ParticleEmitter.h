@@ -104,10 +104,15 @@ public:
 
 	void Init(Particle initParticle)
 	{
-		std::fill(m_vParticles.begin(), m_vParticles.end(), initParticle);
+		//std::fill(m_vParticles.begin(), m_vParticles.end(), initParticle);
+		int cbOffset = initParticle.m_renderItem.ObjCBIndex;
+		std::generate(m_vParticles.begin(), m_vParticles.end(),[&]() 
+			{Particle p = initParticle;
+			p.m_renderItem.ObjCBIndex = cbOffset++;
+			return p; });
 		//Temporary
 		m_vParticles[0].m_alive = true;
-		XMStoreFloat4x4(&m_vParticles[0].m_renderItem.World, DirectX::XMMatrixTranslation(-3.0f, 5.5f, 5.0f));
+		XMStoreFloat4x4(&m_vParticles[0].m_renderItem.World, XMMatrixTranslation(-3.0f, 2.0f, -2.0f));
 	}
 	void Update(float deltaTime)
 	{
