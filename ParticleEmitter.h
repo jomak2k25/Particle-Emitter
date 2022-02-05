@@ -69,7 +69,7 @@ namespace Update_policies			//These are used to define how the particles will mo
 {
 	class Accelerating
 	{
-		float m_initVel;			//The initial velocity of the particles when emitted
+		float m_initSpeed;			//The initial velocity of the particles when emitted
 		float m_acceleration;		//The rate of acceleration for particles
 	protected:
 		void UpdatePositions(float deltaTime, std::vector<Particle>& particles){}
