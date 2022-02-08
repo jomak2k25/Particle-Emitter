@@ -92,11 +92,14 @@ namespace Update_policies			//These are used to define how the particles will mo
 
 namespace Deletion_policies			//These are used to define how when particles are culled
 {
+	constexpr float g_defaultMaxLifeTime = 2.0f;
 	class LifeSpan
 	{
 		float m_maxLifeTime;		//This is used to define how long, in seconds, a particle has before being culled
 	protected:
 		void DeleteParticles(float deltaTime, std::vector<Particle>& particles);
+		LifeSpan() :m_maxLifeTime(g_defaultMaxLifeTime)
+		{}
 	};
 	class CubeBoundaries
 	{

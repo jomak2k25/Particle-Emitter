@@ -19,7 +19,6 @@ void Emission_policies::SphereEmission::Emit(float deltaTime, std::vector<Partic
 		if(!p.alive)
 		{
 			//Resetting the particle and moving it back to the position of the particle emitter
-			p.Reset();
 			p.alive = true;
 			DirectX::XMStoreFloat4x4(&p.render_item.World, DirectX::XMMatrixTranslation(m_spawnPos.x, m_spawnPos.y, m_spawnPos.z));
 
@@ -51,5 +50,15 @@ void Update_policies::Constant::UpdatePositions(float deltaTime, std::vector<Par
 
 void Deletion_policies::LifeSpan::DeleteParticles(float deltaTime, std::vector<Particle>& particles)
 {
-	
+	for(Particle p : particles)
+	{
+		if(p.alive)
+		{
+			p.age += deltaTime;
+			if(p.age > m_maxLifeTime)
+			{
+				p.Reset();
+			}
+		}
+	}
 }
