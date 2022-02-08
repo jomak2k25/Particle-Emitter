@@ -867,7 +867,7 @@ void LitColumnsApp::BuildRenderItems()
 	initParticle.render_item.StartIndexLocation = initParticle.render_item.Geo->DrawArgs["sphere"].StartIndexLocation;
 	initParticle.render_item.BaseVertexLocation = initParticle.render_item.Geo->DrawArgs["sphere"].BaseVertexLocation;
 
-	mParticleEmitter.Init(initParticle);
+	mParticleEmitter.Init(initParticle, XMFLOAT3(0.0f, 2.0f, -3.0f));
 }
 
 void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)

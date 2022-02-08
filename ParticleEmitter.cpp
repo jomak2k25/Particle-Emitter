@@ -1,18 +1,24 @@
 #include "ParticleEmitter.h"
+#include "random"
+
+inline void NormalizeFloat3(DirectX::XMFLOAT3& vec)
+{
+	const float LENGTH = sqrt((vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z));
+	vec = DirectX::XMFLOAT3(vec.x / LENGTH, vec.y / LENGTH, vec.z / LENGTH);
+}
 
 void Emission_policies::SphereEmission::Emit(float deltaTime, std::vector<Particle>& particles)
 {
 	m_spawnTime += deltaTime;
-	float tempSpawnTime(m_spawnTime);
 	int spawnCount(0);
-	while(tempSpawnTime > 0)
+	while(m_spawnTime > m_emitInterval)
 	{
-		tempSpawnTime = -m_emitInterval;
-		if(tempSpawnTime >= 0)
-		{
-			++spawnCount;
-			m_spawnTime = tempSpawnTime;
-		}
+		++spawnCount;
+		m_spawnTime -= m_emitInterval;
+	}
+	if(spawnCount == 0)
+	{
+		return;
 	}
 	for(Particle& p : particles)
 	{
@@ -23,10 +29,12 @@ void Emission_policies::SphereEmission::Emit(float deltaTime, std::vector<Partic
 			DirectX::XMStoreFloat4x4(&p.render_item.World, DirectX::XMMatrixTranslation(m_spawnPos.x, m_spawnPos.y, m_spawnPos.z));
 
 			//Give the particle its direction
+			p.direction.x = static_cast<float>((rand() / static_cast<float>(RAND_MAX)) - 0.5f);
+			p.direction.y = static_cast<float>((rand() / static_cast<float>(RAND_MAX)) - 0.5f);
+			p.direction.z = static_cast<float>((rand() / static_cast<float>(RAND_MAX)) - 0.5f);
 
-
-
-			if(--spawnCount == 0)
+			NormalizeFloat3(p.direction);
+			if (--spawnCount <= 0)
 			{
 				break;
 			}
@@ -42,7 +50,7 @@ void Update_policies::Constant::UpdatePositions(float deltaTime, std::vector<Par
 		{
 			DirectX::XMStoreFloat4x4(&p.render_item.World,
 				DirectX::XMMatrixMultiply(XMLoadFloat4x4(&p.render_item.World), 
-					DirectX::XMMatrixTranslation(p.direction.x * deltaTime, p.direction.y * deltaTime, p.direction.z * deltaTime)));
+					DirectX::XMMatrixTranslation(p.direction.x * deltaTime * m_speed, p.direction.y * deltaTime * m_speed, p.direction.z * deltaTime * m_speed)));
 			p.render_item.NumFramesDirty = g_numFrameResources;
 		}
 	}
@@ -50,7 +58,7 @@ void Update_policies::Constant::UpdatePositions(float deltaTime, std::vector<Par
 
 void Deletion_policies::LifeSpan::DeleteParticles(float deltaTime, std::vector<Particle>& particles)
 {
-	for(Particle p : particles)
+	for(Particle& p : particles)
 	{
 		if(p.alive)
 		{

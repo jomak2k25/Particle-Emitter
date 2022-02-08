@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <algorithm>
+#include <ctime>
+#include <random>
+
 #include <d3d12.h>
 #include <DirectXMath.h>
 #include "FrameResource.h"
@@ -32,54 +35,64 @@ struct Particle
 
 namespace Emission_policies
 {
-	constexpr float g_defaultEmitInterval = 0.2f;
-	class ConeEmission				//Emits particles in cone shape 
+	constexpr float g_defaultEmitInterval = 0.1f;
+	class EmissionBase									//Base for emission policy classes
 	{
-		DirectX::XMFLOAT3		m_spawnPos;	//The positon for spawning objects
-		float			m_emitInterval;//Frequency of particle emission
-		float			m_spawnTime;//An accumalative float which totals delta time and is decreased by spawning particles
+	public:
+		void SetSpawnPos(DirectX::XMFLOAT3 position) { m_spawnPos = position; }
+	protected:
+		virtual void Emit(float deltaTime, std::vector<Particle>& particles) = 0;
+		DirectX::XMFLOAT3 m_spawnPos;					//Position for spawning particles
+		float			m_spawnTime;					//An accumalative float which totals delta time and is decreased by spawning particles
+		float			m_emitInterval;					//Frequency of particle emission
+		EmissionBase():m_spawnPos(0.0f,0.0f,0.0f), m_spawnTime(0.0f), m_emitInterval(g_defaultEmitInterval)
+		{
+			srand(static_cast<unsigned>(time(nullptr)));
+		}
+	};
+
+	class ConeEmission: public EmissionBase				//Emits particles in cone shape 
+	{
 		DirectX::XMFLOAT3		m_dir;		//Direction of the cone
 		float			m_maxAngle;	//Maximum angle of emission around the direction
 	protected:
-		void Emit(float deltaTime, std::vector<Particle>& particles){}
+		void Emit(float deltaTime, std::vector<Particle>& particles)override{}
 	public:
-		ConeEmission(){}
+		ConeEmission():EmissionBase(){}
 	};
-	class SphereEmission			//Simply emits randomly in all directions from a point
+
+	class SphereEmission : public EmissionBase			//Simply emits randomly in all directions from a point
 	{
-		DirectX::XMFLOAT3		m_spawnPos;	//The positon for spawning objects
-		float			m_emitInterval;//Frequency of particle emission
-		float			m_spawnTime;//An accumalative float which totals delta time and is decreased by spawning particles
 	protected:
-		void Emit(float deltaTime, std::vector<Particle>& particles);
-		SphereEmission(DirectX::XMFLOAT3 pos):m_spawnPos(pos), m_emitInterval(g_defaultEmitInterval), m_spawnTime(0.0f)
+		void Emit(float deltaTime, std::vector<Particle>& particles) override;
+		SphereEmission():EmissionBase()
 		{}
 	};
-	class CircleEmission			//Emits particles in random directions on a plan defined by a normal vector
+
+	class CircleEmission : public EmissionBase			//Emits particles in random directions on a plan defined by a normal vector
 	{
-		DirectX::XMFLOAT3		m_spawnPos;	//The positon for spawning objects
-		float			m_emitInterval;//Frequency of particle emission
-		float			m_spawnTime;//An accumalative float which totals delta time and is decreased by spawning particles
 		Vector3Float m_normal;		//The normal of the circle can be used to 
 	protected:
-		void Emit(float deltaTime, std::vector<Particle>& particles){}
+		void Emit(float deltaTime, std::vector<Particle>& particles)override{};
 	};
 }
 
 namespace Update_policies			//These are used to define how the particles will move after emission
 {
+	constexpr float g_defualtSpeed = 2.0f;
 	class Accelerating
 	{
 		float m_initSpeed;			//The initial velocity of the particles when emitted
 		float m_acceleration;		//The rate of acceleration for particles
 	protected:
-		void UpdatePositions(float deltaTime, std::vector<Particle>& particles){}
+		void UpdatePositions(float deltaTime, std::vector<Particle>& particles) {}
 	};
 	class Constant
 	{
 		float m_speed;				//The velocity of the particles when emitted
 	protected:
 		void UpdatePositions(float deltaTime, std::vector<Particle>& particles);
+		Constant() :m_speed(g_defualtSpeed) {};
 	};
 	class WithGravity
 	{
@@ -119,7 +132,6 @@ namespace Deletion_policies			//These are used to define how when particles are 
 template<class Emission, class Update, class Deletion>
 class ParticleEmitter : public Emission, public Update, public Deletion
 {
-	DirectX::XMFLOAT3				m_pos;				//Position of the emitter
 	std::vector<Particle>	m_vParticles;		//Stores the particle objects
 
 	using Emission::Emit;
@@ -127,19 +139,17 @@ class ParticleEmitter : public Emission, public Update, public Deletion
 	using Deletion::DeleteParticles;
 public:
 	ParticleEmitter()
-		:m_pos(0.0f,0.0f,0.0f), m_vParticles(50), Emission(m_pos)  //MOVE POLICY VALUES TO PUBLIC SETTERS
+		:Emission(), m_vParticles(50)  //MOVE POLICY VALUES TO PUBLIC SETTERS
 	{}
 
-	void Init(Particle initParticle)
+	void Init(Particle initParticle, DirectX::XMFLOAT3 position)
 	{
 		int cbOffset = initParticle.render_item.ObjCBIndex;
 		std::generate(m_vParticles.begin(), m_vParticles.end(),[&]() 
 			{Particle p = initParticle;
 			p.render_item.ObjCBIndex = cbOffset++;
 			return p;});
-		DirectX::XMStoreFloat4x4(&m_vParticles[0].render_item.World, DirectX::XMMatrixTranslation(m_pos.x, m_pos.y, m_pos.z));
-		m_vParticles[0].direction = DirectX::XMFLOAT3(0.2f, 0.2f, 0.0f);
-		m_vParticles[0].alive = true;
+		Emission::EmissionBase::SetSpawnPos(position);
 	}
 	void Update(float deltaTime)
 	{
@@ -199,13 +209,13 @@ public:
 		}
 	}
 
-	void StartEmission(){}
-	void StopEmission(){}
+	void StartEmission(){}	//TODO
+	void StopEmission(){}  //TODO
 
-	void SetEmissionRate(){}
-	void SetMaxParticles(){}
+	void SetEmissionRate(){}  //TODO
+	void SetMaxParticles(){}  //TODO
 
-	void SetPosition(DirectX::XMFLOAT3 newPos) { m_pos = newPos; }
+	void SetPosition(DirectX::XMFLOAT3 newPos) { Emission::EmissionBase::SetSpawnPos(position); }
 
 	std::vector<Particle>& GetParticles() { return m_vParticles; }
 };
