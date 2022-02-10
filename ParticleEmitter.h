@@ -105,26 +105,34 @@ namespace Update_policies			//These are used to define how the particles will mo
 
 namespace Deletion_policies			//These are used to define how when particles are culled
 {
+	class BaseDeletion
+	{
+	public:
+		void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; }
+	protected:
+		virtual void DeleteParticles(float deltaTime, std::vector<Particle>& particles) = 0;
+		DirectX::XMFLOAT3 m_spawnPos;
+	};
 	constexpr float g_defaultMaxLifeTime = 2.0f;
-	class LifeSpan
+	class LifeSpan : public BaseDeletion
 	{
 		float m_maxLifeTime;		//This is used to define how long, in seconds, a particle has before being culled
 	protected:
-		void DeleteParticles(float deltaTime, std::vector<Particle>& particles);
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
 		LifeSpan() :m_maxLifeTime(g_defaultMaxLifeTime)
 		{}
 	};
-	class CubeBoundaries
+	class CubeBoundaries : public BaseDeletion
 	{
 		DirectX::XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
-		void DeleteParticles(float deltaTime, std::vector<Particle>& particles){}
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
 	};
-	class SphereBoundaries
+	class SphereBoundaries : public BaseDeletion
 	{
 		float m_maxDistance;		//Defines how far a particle can travel from the emitted befor it is culled
 	protected:
-		void DeleteParticles(float deltaTime, std::vector<Particle>& particles){}
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override {}
 	};
 }
 
