@@ -11,7 +11,6 @@
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
-//using namespace DirectX;
 
 struct Vector3Float
 {
@@ -158,6 +157,7 @@ public:
 			p.render_item.ObjCBIndex = cbOffset++;
 			return p;});
 		Emission::EmissionBase::SetSpawnPos(position);
+		Deletion::DeletionBase::SetSpawnPos(position);
 	}
 	void Update(float deltaTime)
 	{
@@ -223,7 +223,11 @@ public:
 	void SetEmissionRate(){}  //TODO
 	void SetMaxParticles(){}  //TODO
 
-	void SetPosition(DirectX::XMFLOAT3 newPos) { Emission::EmissionBase::SetSpawnPos(position); }
+	void SetPosition(DirectX::XMFLOAT3 newPos)
+	{
+		Emission::EmissionBase::SetSpawnPos(newPos);
+		Deletion::DeletionBase::SetSpawnPos(newPos);
+	}
 
 	std::vector<Particle>& GetParticles() { return m_vParticles; }
 };

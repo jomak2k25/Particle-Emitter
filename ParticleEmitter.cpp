@@ -73,6 +73,16 @@ void Deletion_policies::LifeSpan::DeleteParticles(float deltaTime, std::vector<P
 
 void Deletion_policies::CubeBoundaries::DeleteParticles(float deltaTime, std::vector<Particle>& particles)
 {
-	
+	for(Particle& p : particles)
+	{
+		if(p.alive)
+		{
+			p.age += deltaTime;
+			if(true) //Do this
+			{
+				p.Reset();
+			}
+		}
+	}
 }
 
