@@ -26,7 +26,8 @@ void Emission_policies::SphereEmission::Emit(float deltaTime, std::vector<Partic
 		{
 			//Resetting the particle and moving it back to the position of the particle emitter
 			p.alive = true;
-			DirectX::XMStoreFloat4x4(&p.render_item.World, DirectX::XMMatrixTranslation(m_spawnPos.x, m_spawnPos.y, m_spawnPos.z));
+			p.position = m_spawnPos;
+			//DirectX::XMStoreFloat4x4(&p.render_item.World, DirectX::XMMatrixTranslation(m_spawnPos.x, m_spawnPos.y, m_spawnPos.z));
 
 			//Give the particle its direction
 			p.direction.x = static_cast<float>((rand() / static_cast<float>(RAND_MAX)) - 0.5f);
@@ -48,9 +49,11 @@ void Update_policies::Constant::UpdatePositions(float deltaTime, std::vector<Par
 	{
 		if(p.alive)
 		{
-			DirectX::XMStoreFloat4x4(&p.render_item.World,
-				DirectX::XMMatrixMultiply(XMLoadFloat4x4(&p.render_item.World), 
-					DirectX::XMMatrixTranslation(p.direction.x * deltaTime * m_speed, p.direction.y * deltaTime * m_speed, p.direction.z * deltaTime * m_speed)));
+			const float SPEED_TIME = deltaTime * m_speed;
+			p.position.x += p.direction.x * SPEED_TIME;
+			p.position.y += p.direction.y * SPEED_TIME;
+			p.position.z += p.direction.z * SPEED_TIME;
+			DirectX::XMStoreFloat4x4(&p.render_item.World,DirectX::XMMatrixTranslation(p.position.x, p.position.y, p.position.z));
 			p.render_item.NumFramesDirty = g_numFrameResources;
 		}
 	}
