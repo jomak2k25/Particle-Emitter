@@ -12,20 +12,13 @@
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 
-struct Vector3Float
-{
-	Vector3Float(float xInit, float yInit, float zInit)
-		:x(xInit), y(yInit), z(zInit)
-	{}
-	float x, y, z;
-};
-
 struct Particle
 {
-	RenderItem		render_item;
+	RenderItem				render_item;
+	DirectX::XMFLOAT3		position;
 	DirectX::XMFLOAT3		direction;
-	float			age;
-	bool			alive;
+	float					age;
+	bool					alive;
 	Particle()
 		:render_item(), direction(0.0f, 0.0f, 0.0f), age(0.0f), alive(false)
 	{}
@@ -70,7 +63,7 @@ namespace Emission_policies
 
 	class CircleEmission : public EmissionBase			//Emits particles in random directions on a plan defined by a normal vector
 	{
-		Vector3Float m_normal;		//The normal of the circle can be used to 
+		DirectX::XMFLOAT3 m_normal;		//The normal of the circle can be used to 
 	protected:
 		void Emit(float deltaTime, std::vector<Particle>& particles)override{};
 	};
@@ -104,7 +97,7 @@ namespace Update_policies			//These are used to define how the particles will mo
 
 namespace Deletion_policies			//These are used to define how when particles are culled
 {
-	class BaseDeletion
+	class DeletionBase
 	{
 	public:
 		void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; }
@@ -113,7 +106,7 @@ namespace Deletion_policies			//These are used to define how when particles are 
 		DirectX::XMFLOAT3 m_spawnPos;
 	};
 	constexpr float g_defaultMaxLifeTime = 2.0f;
-	class LifeSpan : public BaseDeletion
+	class LifeSpan : public DeletionBase
 	{
 		float m_maxLifeTime;		//This is used to define how long, in seconds, a particle has before being culled
 	protected:
@@ -121,13 +114,13 @@ namespace Deletion_policies			//These are used to define how when particles are 
 		LifeSpan() :m_maxLifeTime(g_defaultMaxLifeTime)
 		{}
 	};
-	class CubeBoundaries : public BaseDeletion
+	class CubeBoundaries : public DeletionBase
 	{
 		DirectX::XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
 		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
 	};
-	class SphereBoundaries : public BaseDeletion
+	class SphereBoundaries : public DeletionBase
 	{
 		float m_maxDistance;		//Defines how far a particle can travel from the emitted befor it is culled
 	protected:
