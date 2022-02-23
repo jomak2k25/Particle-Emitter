@@ -22,7 +22,7 @@ struct Particle
 	Particle()
 		:render_item(), direction(0.0f, 0.0f, 0.0f), age(0.0f), alive(false)
 	{}
-	void Reset() { direction = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f); age = 0.0f; alive = false; }
+	void Reset() { direction = DirectX::XMFLOAT3(); age = 0.0f; alive = false; position = DirectX::XMFLOAT3(); }
 };
 
 namespace Emission_policies
@@ -100,7 +100,7 @@ namespace Deletion_policies			//These are used to define how when particles are 
 	class DeletionBase
 	{
 	public:
-		void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; }
+		virtual void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; }
 	protected:
 		virtual void DeleteParticles(float deltaTime, std::vector<Particle>& particles) = 0;
 		DirectX::XMFLOAT3 m_spawnPos;
@@ -119,6 +119,7 @@ namespace Deletion_policies			//These are used to define how when particles are 
 		DirectX::XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
 		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
+		void SetSpawnPos(DirectX::XMFLOAT3 pos) override;
 	};
 	class SphereBoundaries : public DeletionBase
 	{

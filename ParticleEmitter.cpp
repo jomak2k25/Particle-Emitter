@@ -81,11 +81,21 @@ void Deletion_policies::CubeBoundaries::DeleteParticles(float deltaTime, std::ve
 		if(p.alive)
 		{
 			p.age += deltaTime;
-			if(true) //Do this
+			DirectX::XMFLOAT3 fabPos(fabs(p.position.x), fabs(p.position.y), fabs(p.position.z));
+
+			if(fabPos.x > m_bounds.x || fabPos.y > m_bounds.y || fabPos.z > m_bounds.z) //Do this
 			{
 				p.Reset();
 			}
 		}
 	}
+}
+
+void Deletion_policies::CubeBoundaries::SetSpawnPos(DirectX::XMFLOAT3 pos)
+{
+	m_bounds.x += pos.x;
+	m_bounds.y += pos.y;
+	m_bounds.z += pos.z;
+	DeletionBase::SetSpawnPos(pos);
 }
 
