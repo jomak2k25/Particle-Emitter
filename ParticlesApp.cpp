@@ -19,7 +19,7 @@ using namespace DirectX::PackedVector;
 #pragma comment(lib, "D3D12.lib")
 
 typedef ParticleEmitter<Emission_policies::SphereEmission,
-	Update_policies::Constant, Deletion_policies::LifeSpan> BasicParticleEmitter;
+	Update_policies::Constant, Deletion_policies::CubeBoundaries> BasicParticleEmitter;
 
 class ParticlesApp : public D3DApp
 {
@@ -755,10 +755,11 @@ void ParticlesApp::BuildMaterials()
 
 void ParticlesApp::BuildRenderItems()
 {
+	UINT objCBIndex = 0;
 	//auto boxRitem = std::make_unique<RenderItem>();
 	//XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f)*XMMatrixTranslation(0.0f, 0.5f, 0.0f));
 	//XMStoreFloat4x4(&boxRitem->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
-	//boxRitem->ObjCBIndex = 0;
+	//boxRitem->ObjCBIndex = objCBIndex++;
 	//boxRitem->Mat = mMaterials["stone0"].get();
 	//boxRitem->Geo = mGeometries["shapeGeo"].get();
 	//boxRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -767,22 +768,22 @@ void ParticlesApp::BuildRenderItems()
 	//boxRitem->BaseVertexLocation = boxRitem->Geo->DrawArgs["box"].BaseVertexLocation;
 	//mAllRitems.push_back(std::move(boxRitem));
 
- //   auto gridRitem = std::make_unique<RenderItem>();
- //   gridRitem->World = MathHelper::Identity4x4();
-	//XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(8.0f, 8.0f, 1.0f));
-	//gridRitem->ObjCBIndex = 1;
-	//gridRitem->Mat = mMaterials["tile0"].get();
-	//gridRitem->Geo = mGeometries["shapeGeo"].get();
-	//gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
- //   gridRitem->IndexCount = gridRitem->Geo->DrawArgs["grid"].IndexCount;
- //   gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
- //   gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
-	//mAllRitems.push_back(std::move(gridRitem));
+	auto gridRitem = std::make_unique<RenderItem>();
+	gridRitem->World = MathHelper::Identity4x4();
+	XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(8.0f, 8.0f, 1.0f));
+	gridRitem->ObjCBIndex = objCBIndex++;
+	gridRitem->Mat = mMaterials["tile0"].get();
+	gridRitem->Geo = mGeometries["shapeGeo"].get();
+	gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	gridRitem->IndexCount = gridRitem->Geo->DrawArgs["grid"].IndexCount;
+	gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
+	gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(gridRitem));
 
 	//auto skullRitem = std::make_unique<RenderItem>();
 	//XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.5f, 0.5f, 0.5f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
 	//skullRitem->TexTransform = MathHelper::Identity4x4();
-	//skullRitem->ObjCBIndex = 2;
+	//skullRitem->ObjCBIndex = objCBIndex++;
 	//skullRitem->Mat = mMaterials["skullMat"].get();
 	//skullRitem->Geo = mGeometries["skullGeo"].get();
 	//skullRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -792,7 +793,7 @@ void ParticlesApp::BuildRenderItems()
 	//mAllRitems.push_back(std::move(skullRitem));
 
 	//XMMATRIX brickTexTransform = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-	//UINT objCBIndex = 3;
+	
 	//for(int i = 0; i < 5; ++i)
 	//{
 	//	auto leftCylRitem = std::make_unique<RenderItem>();
@@ -853,13 +854,13 @@ void ParticlesApp::BuildRenderItems()
 	//}
 
 	//// All the render items are opaque.
-	//for(auto& e : mAllRitems)
-	//	mOpaqueRitems.push_back(e.get());
+	for(auto& e : mAllRitems)
+		mOpaqueRitems.push_back(e.get());
 
 	Particle initParticle;
 	//XMStoreFloat4x4(&initParticle.m_renderItem.World, XMMatrixTranslation(-3.0f, 2.0f, -2.0f));
 	initParticle.render_item.TexTransform = MathHelper::Identity4x4();
-	initParticle.render_item.ObjCBIndex = /*objCBIndex++*/0;
+	initParticle.render_item.ObjCBIndex = objCBIndex++;
 	initParticle.render_item.Mat = mMaterials["stone1"].get();
 	initParticle.render_item.Geo = mGeometries["shapeGeo"].get();
 	initParticle.render_item.PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;

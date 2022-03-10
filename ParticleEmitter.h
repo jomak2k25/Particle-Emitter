@@ -120,6 +120,7 @@ namespace Deletion_policies			//These are used to define how when particles are 
 	protected:
 		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
 		void SetSpawnPos(DirectX::XMFLOAT3 pos) override;
+		CubeBoundaries() :m_bounds(DirectX::XMFLOAT3{3.0f,3.0f,3.0f}){}
 	};
 	class SphereBoundaries : public DeletionBase
 	{
