@@ -868,7 +868,7 @@ void ParticlesApp::BuildRenderItems()
 	initParticle.render_item.StartIndexLocation = initParticle.render_item.Geo->DrawArgs["sphere"].StartIndexLocation;
 	initParticle.render_item.BaseVertexLocation = initParticle.render_item.Geo->DrawArgs["sphere"].BaseVertexLocation;
 
-	mParticleEmitter.Init(initParticle, XMFLOAT3(0.0f, 2.0f, -3.0f));
+	mParticleEmitter.Init(initParticle, XMFLOAT3(0.0f, 6.0f, -3.0f));
 }
 
 void ParticlesApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)

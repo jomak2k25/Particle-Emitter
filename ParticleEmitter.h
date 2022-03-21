@@ -100,7 +100,7 @@ namespace Deletion_policies			//These are used to define how when particles are 
 	class DeletionBase
 	{
 	public:
-		virtual void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; }
+		virtual void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; };
 	protected:
 		virtual void DeleteParticles(float deltaTime, std::vector<Particle>& particles) = 0;
 		DirectX::XMFLOAT3 m_spawnPos;
@@ -116,7 +116,14 @@ namespace Deletion_policies			//These are used to define how when particles are 
 	};
 	class CubeBoundaries : public DeletionBase
 	{
-		DirectX::XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
+		struct Bounds
+		{
+			float xMin, xMax;
+			float yMin, yMax;
+			float zMin, zMax;
+			Bounds(DirectX::XMFLOAT3 init) :xMin(-init.x), xMax(init.x), yMin(-init.y), yMax(init.y), zMin(-init.z), zMax(init.z){};
+			Bounds() { memset(this, 0.0f, sizeof(Bounds)); }
+		}m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
 		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
 		void SetSpawnPos(DirectX::XMFLOAT3 pos) override;
@@ -152,7 +159,7 @@ public:
 			p.render_item.ObjCBIndex = cbOffset++;
 			return p;});
 		Emission::EmissionBase::SetSpawnPos(position);
-		Deletion::DeletionBase::SetSpawnPos(position);
+		Deletion::SetSpawnPos(position);
 	}
 	void Update(float deltaTime)
 	{
