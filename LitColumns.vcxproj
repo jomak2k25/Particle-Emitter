@@ -151,7 +151,7 @@
     <ClCompile Include="Common\GeometryGenerator.cpp" />
     <ClCompile Include="Common\MathHelper.cpp" />
     <ClCompile Include="FrameResource.cpp" />
-    <ClCompile Include="LitColumnsApp.cpp" />
+    <ClCompile Include="ParticlesApp.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
   </ItemGroup>
   <ItemGroup>

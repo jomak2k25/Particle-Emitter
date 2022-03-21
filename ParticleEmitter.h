@@ -11,26 +11,18 @@
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
-//using namespace DirectX;
-
-struct Vector3Float
-{
-	Vector3Float(float xInit, float yInit, float zInit)
-		:x(xInit), y(yInit), z(zInit)
-	{}
-	float x, y, z;
-};
 
 struct Particle
 {
-	RenderItem		render_item;
+	RenderItem				render_item;
+	DirectX::XMFLOAT3		position;
 	DirectX::XMFLOAT3		direction;
-	float			age;
-	bool			alive;
+	float					age;
+	bool					alive;
 	Particle()
 		:render_item(), direction(0.0f, 0.0f, 0.0f), age(0.0f), alive(false)
 	{}
-	void Reset() { direction = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f); age = 0.0f; alive = false; }
+	void Reset() { direction = DirectX::XMFLOAT3(); age = 0.0f; alive = false; position = DirectX::XMFLOAT3(); }
 };
 
 namespace Emission_policies
@@ -71,7 +63,7 @@ namespace Emission_policies
 
 	class CircleEmission : public EmissionBase			//Emits particles in random directions on a plan defined by a normal vector
 	{
-		Vector3Float m_normal;		//The normal of the circle can be used to 
+		DirectX::XMFLOAT3 m_normal;		//The normal of the circle can be used to 
 	protected:
 		void Emit(float deltaTime, std::vector<Particle>& particles)override{};
 	};
@@ -105,26 +97,43 @@ namespace Update_policies			//These are used to define how the particles will mo
 
 namespace Deletion_policies			//These are used to define how when particles are culled
 {
+	class DeletionBase
+	{
+	public:
+		virtual void SetSpawnPos(DirectX::XMFLOAT3 pos) { m_spawnPos = pos; };
+	protected:
+		virtual void DeleteParticles(float deltaTime, std::vector<Particle>& particles) = 0;
+		DirectX::XMFLOAT3 m_spawnPos;
+	};
 	constexpr float g_defaultMaxLifeTime = 2.0f;
-	class LifeSpan
+	class LifeSpan : public DeletionBase
 	{
 		float m_maxLifeTime;		//This is used to define how long, in seconds, a particle has before being culled
 	protected:
-		void DeleteParticles(float deltaTime, std::vector<Particle>& particles);
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
 		LifeSpan() :m_maxLifeTime(g_defaultMaxLifeTime)
 		{}
 	};
-	class CubeBoundaries
+	class CubeBoundaries : public DeletionBase
 	{
-		DirectX::XMFLOAT3 m_bounds;		//Defines how far in each direction a particle can travel before being culled
+		struct Bounds
+		{
+			float xMin, xMax;
+			float yMin, yMax;
+			float zMin, zMax;
+			Bounds(DirectX::XMFLOAT3 init) :xMin(-init.x), xMax(init.x), yMin(-init.y), yMax(init.y), zMin(-init.z), zMax(init.z){};
+			Bounds() { memset(this, 0.0f, sizeof(Bounds)); }
+		}m_bounds;		//Defines how far in each direction a particle can travel before being culled
 	protected:
-		void DeleteParticles(float deltaTime, std::vector<Particle>& particles){}
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override;
+		void SetSpawnPos(DirectX::XMFLOAT3 pos) override;
+		CubeBoundaries() :m_bounds(DirectX::XMFLOAT3{3.0f,3.0f,3.0f}){}
 	};
-	class SphereBoundaries
+	class SphereBoundaries : public DeletionBase
 	{
 		float m_maxDistance;		//Defines how far a particle can travel from the emitted befor it is culled
 	protected:
-		void DeleteParticles(float deltaTime, std::vector<Particle>& particles){}
+		void DeleteParticles(float deltaTime, std::vector<Particle>& particles) override {}
 	};
 }
 
@@ -150,6 +159,7 @@ public:
 			p.render_item.ObjCBIndex = cbOffset++;
 			return p;});
 		Emission::EmissionBase::SetSpawnPos(position);
+		Deletion::SetSpawnPos(position);
 	}
 	void Update(float deltaTime)
 	{
@@ -215,7 +225,11 @@ public:
 	void SetEmissionRate(){}  //TODO
 	void SetMaxParticles(){}  //TODO
 
-	void SetPosition(DirectX::XMFLOAT3 newPos) { Emission::EmissionBase::SetSpawnPos(position); }
+	void SetPosition(DirectX::XMFLOAT3 newPos)
+	{
+		Emission::EmissionBase::SetSpawnPos(newPos);
+		Deletion::DeletionBase::SetSpawnPos(newPos);
+	}
 
 	std::vector<Particle>& GetParticles() { return m_vParticles; }
 };
